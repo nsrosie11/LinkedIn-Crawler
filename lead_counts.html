@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Crawler - Lead Counts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #0077b5;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #0077b5;
+            color: white;
+            cursor: pointer;
+            position: relative;
+        }
+        th:hover {
+            background-color: #005582;
+        }
+        th.sorted:after {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            margin-top: -4px;
+            border-width: 0 4px 8px;
+            border-style: solid;
+            border-color: transparent transparent #fff;
+        }
+        th.sorted.desc:after {
+            border-width: 8px 4px 0;
+            border-color: #fff transparent transparent;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #e6f2ff;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lead Count by Template</h1>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th id="sort-template" class="sorted">Template Name</th>
+                    <th id="sort-count">Lead Count</th>
+                </tr>
+            </thead>
+            <tbody id="lead-counts">
+                <!-- Data will be inserted here by JavaScript -->
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td id="total-count">0</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <a href="index.html" class="back-link">Back to Crawler Manager</a>
+    </div>
+
+    <script>
+        // Lead count data
+        const leadCounts = [
+            { template: "bprks_programmer", count: 287 },
+            { template: "fds_it_dba", count: 218 },
+            { template: "fds_sys_eng", count: 205 },
+            { template: "bprks_credit_marketing", count: 149 },
+            { template: "bumame_sales", count: 143 },
+            { template: "bprks_ba", count: 111 },
+            { template: "bprks_it", count: 107 },
+            { template: "fds_risk_management", count: 98 },
+            { template: "fds_senior_tax", count: 88 },
+            { template: "bukirmega_sales", count: 61 },
+            { template: "bukirmega_ppe", count: 60 },
+            { template: "fds_junior_it", count: 58 },
+            { template: "fds_it_pm", count: 57 },
+            { template: "bukirmega_marketing", count: 55 },
+            { template: "bukirmega_production", count: 53 },
+            { template: "otomultiartha_headcompliance", count: 51 },
+            { template: "kusuma_marketing", count: 46 },
+            { template: "alfamedika_storemanager", count: 43 },
+            { template: "otomultiartha_secretary", count: 42 },
+            { template: "rey_claim", count: 39 },
+            { template: "mahkota_finance", count: 38 },
+            { template: "zuri_chief_accountant", count: 31 },
+            { template: "kusuma_gm", count: 27 },
+            { template: "bumame_sales_manager", count: 20 },
+            { template: "zuri_hotel_gm", count: 17 },
+            { template: "mahkota_site", count: 9 },
+            { template: "kusuma_finance", count: 9 },
+            { template: "mahkota_marketing", count: 2 },
+            { template: "bprks-credit-marketing-head", count: 0 }
+        ];
+
+        // Sort direction state
+        let sortState = {
+            template: 'asc',
+            count: 'none'
+        };
+
+        // Function to sort data
+        function sortData(field) {
+            // Update sort state
+            if (sortState[field] === 'none' || sortState[field] === 'desc') {
+                sortState = { template: 'none', count: 'none' };
+                sortState[field] = 'asc';
+            } else {
+                sortState = { template: 'none', count: 'none' };
+                sortState[field] = 'desc';
+            }
+
+            // Sort the data
+            leadCounts.sort((a, b) => {
+                if (field === 'template') {
+                    return sortState[field] === 'asc' 
+                        ? a.template.localeCompare(b.template) 
+                        : b.template.localeCompare(a.template);
+                } else {
+                    return sortState[field] === 'asc' 
+                        ? a.count - b.count 
+                        : b.count - a.count;
+                }
+            });
+
+            // Update UI
+            updateTable();
+            updateSortIndicators();
+        }
+
+        // Function to update sort indicators
+        function updateSortIndicators() {
+            const templateHeader = document.getElementById('sort-template');
+            const countHeader = document.getElementById('sort-count');
+            
+            templateHeader.classList.remove('sorted', 'desc');
+            countHeader.classList.remove('sorted', 'desc');
+            
+            if (sortState.template !== 'none') {
+                templateHeader.classList.add('sorted');
+                if (sortState.template === 'desc') {
+                    templateHeader.classList.add('desc');
+                }
+            }
+            
+            if (sortState.count !== 'none') {
+                countHeader.classList.add('sorted');
+                if (sortState.count === 'desc') {
+                    countHeader.classList.add('desc');
+                }
+            }
+        }
+
+        // Function to update the table
+        function updateTable() {
+            const tableBody = document.getElementById('lead-counts');
+            tableBody.innerHTML = '';
+            let totalCount = 0;
+            
+            leadCounts.forEach(item => {
+                const row = document.createElement('tr');
+                
+                const templateCell = document.createElement('td');
+                templateCell.textContent = item.template;
+                row.appendChild(templateCell);
+                
+                const countCell = document.createElement('td');
+                countCell.textContent = item.count;
+                row.appendChild(countCell);
+                
+                tableBody.appendChild(row);
+                
+                totalCount += item.count;
+            });
+            
+            document.getElementById('total-count').textContent = totalCount;
+        }
+
+        // Initialize the table
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial sort by template name (ascending)
+            sortData('template');
+            
+            // Add event listeners to headers
+            document.getElementById('sort-template').addEventListener('click', function() {
+                sortData('template');
+            });
+            
+            document.getElementById('sort-count').addEventListener('click', function() {
+                sortData('count');
+            });
+        });
+    </script>
+</body>
+</html>

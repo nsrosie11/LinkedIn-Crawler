@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Crawler Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Added navigation links -->
+    <style>
+         .nav-bar {
+             background-color: #0077b5;
+             padding: 10px 20px;
+             margin-bottom: 20px;
+             border-radius: 8px;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+         }
+         .nav-bar h1 {
+             color: white;
+             margin: 0;
+             font-size: 1.5em;
+         }
+         .nav-links {
+             display: flex;
+             gap: 15px;
+         }
+         .nav-links a {
+             color: white;
+             text-decoration: none;
+             padding: 5px 10px;
+             border-radius: 4px;
+             transition: background-color 0.3s;
+         }
+         .nav-links a:hover {
+             background-color: rgba(255, 255, 255, 0.2);
+         }
+     </style>
+      <style>
+         body {
+             font-family: Arial, sans-serif;
+             /* max-width: 800px; */
+             margin: 0 auto;
+             padding: 20px;
+             background-color: #f5f5f5;
+         }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex; 
+            gap: 20px;     
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background-color: #0077b5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005582;
+        }
+        .search-templates {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .leads-list {
+                margin-top: 15px;
+                padding: 10px;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            
+            .connection-counter {
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #0077b5;
+            }
+            
+            #successful-leads li {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .lead-info {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .lead-name {
+                font-weight: bold;
+                color: #0077b5;
+            }
+            
+            .lead-title, .lead-company {
+                font-size: 0.9em;
+                color: #666;
+            }
+            
+            .lead-time {
+                color: #999;
+                font-size: 0.8em;
+            }
+        
+        .progress-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .progress-log {
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .log-info { color: #0077b5; }
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+
+        #stopButton {
+            margin-left: 10px;
+        }
+
+        #stopButton:hover {
+            background-color: #c82333;
+        }
+
+        .button-disabled {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #0077b5;
+            outline: none;
+        }
+        .crawlerform-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;       /* Add this */
+            flex-direction: row;
+        }
+
+        .crawler-container {
+            flex:2;
+        }
+
+        .leads-list {
+            flex: 1;       /* Add this */
+            margin-top: 0; /* Modify this */
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .history-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .history-section h4 {
+            margin: 0 0 10px 0;
+            color: #0077b5;
+        }
+
+        .history-leads {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-leads li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-leads li:last-child {
+            border-bottom: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0077b5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <h1>LinkedIn Crawler Manager</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="lead_counts.html">Lead Counts</a>
+        </div>
+    </div>
+    <div class="container">
+
+        <div class="crawlerform-container">
+            
+            <div class="crawler-container">
+
+                <form id="crawlerForm"><h1>LinkedIn Crawler Manager</h1>
+                    <div class="form-group">
+                        <label for="email">LinkedIn Email:</label>
+                        <input type="text" id="email" name="email" value="aktsa@sarana.ai" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">LinkedIn Password:</label>
+                        <input type="password" id="password" name="password" value="TidarIPO1234!" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="searchTemplate">Select Search Template:</label>
+                        <select id="searchTemplate" name="searchTemplate">
+                            <option value="">-- Select a template --</option>
+                            <option value="bumame_sales">Bumame - Management Trainee Account Executive</option>
+                            <option value="bumame_sales_manager">Bumame - Corporate Sales Manager</option>
+                            <option value="bprks-credit-marketing-head">BPR KS - Credit Marketing Head</option>
+                            <option value="bprks_business_operations_advisor">BPR KS - Business Operations Advisor</option>
+                            <option value="bprks_credit_marketing">BPR KS - Credit Marketing</option>
+                            <option value="bprks_programmer">BPR KS - Full Stack Dev</option>
+                            <option value="bprks_ba">BPR KS - Business Analyst</option>
+                            <option value="bprks_it">BPR KS - IT Staff</option>
+                            <option value="bprks_secretary">BPR KS - Secretary</option>
+                            <option value="mahkota_finance">Mahkota - Senior Finance Manager (Batam)</option>
+                            <option value="mahkota_site">Mahkota - Site Manager (Batam)</option>
+                            <option value="mahkota_marketing">Mahkota - Marketing Inhouse (Batam)</option>
+                            <option value="mahkota_project">Mahkota - Project General Manager (Tangerang)</option>
+                            <option value="rey_claim">Rey.id - Head of Claim (Jakarta)</option>
+                            <option value="kusuma_gm">Kusuma General Manager</option>
+                            <option value="kusuma_finance">Kusuma Finance & Accounting Officer</option>
+                            <option value="kusuma_marketing">Kusuma Marketing Manager</option>
+                            <option value="alfamedika_storemanager">Alfa Medika Store Manager</option>
+                            <option value="zuri_chief_accountant">Zuri Chief Accountant</option>
+                            <option value="zuri_hotel_gm">Zuri Hotel General Manager</option>
+                            <option value="fds_junior_it">FDS Junior IT Sys Admin</option>
+                            <option value="fds_it_pm">FDS IT Project Manager</option>
+                            <option value="fds_it_dba">FDS IT Database Admin</option>
+                            <option value="fds_sys_eng">FDS Sys Engineer</option>
+                            <option value="fds_risk_management">FDS Risk Management Specialist</option>
+                            <option value="fds_senior_tax">FDS Senior Tax</option>
+                            <option value="bukirmega_ppe">Bukit Mega - PPE Assistant Manager</option>
+                            <option value="bukirmega_sales">Bukit Mega - Sales Assistant Manager</option>
+                            <option value="bukirmega_production">Bukit Mega - Production Manager</option>
+                            <option value="bukirmega_marketing">Bukit Mega - Marketing Manager</option>
+                            <option value="otomultiartha_headcompliance">Oto Multiartha - Head Compliance</option>
+                            <option value="otomultiartha_secretary">Oto Multiartha - Secretary to Director</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="searchUrl">Search URL:</label>
+                        <textarea id="searchUrl" name="searchUrl" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="connectNote">Connection Note:</label>
+                        <textarea id="connectNote" name="connectNote" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="leadLimit">Lead Limit (Optional):</label>
+                        <input type="number" id="leadLimit" name="lead_Limit" min="1" placeholder="Leave empty for no limit">
+                    </div>    
+                    <div class="form-group">
+                        <button type="submit" id="startButton">Start Crawling</button>
+                        <button type="button" id="saveButton" style="background-color: #000080; color: white;">
+                            Save Template
+                        </button>
+                        <button type="button" id="stopButton" style="background-color: #dc3545; display: none;">
+                            Stop Crawling
+                        </button>
+                    </div>                    
+                </form>
+                <div id="progress" class="progress-container" style="display: none;">
+                    <h2>Crawler Progress</h2>
+                    <div class="browser-view">
+                        <div id="progress-log" class="progress-log"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div id="leads-list" class="leads-list">
+                    <div id="stream-loading" class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Loading leads...</p>
+                    </div>
+                    <h3>Successful Connections</h3>
+                    <ul id="successful-leads"></ul>
+                </div>
+
+                <div id="template-history" class="template-history">
+                    <div id="history-loading" class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Loading history...</p>
+                    </div>
+                    <div id="history-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <script>
+        // Template data
+        const templates = {
+
+            bumame_sales: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4431092122%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A110%2Ctext%3AEntry%2520Level%2CselectionType%3AINCLUDED)%2C(id%3A100%2Ctext%3AIn%2520Training%2CselectionType%3AINCLUDED)%2C(id%3A200%2Ctext%3AEntry%2520Level%2520Manager%2CselectionType%3AEXCLUDED)%2C(id%3A300%2Ctext%3AVice%2520President%2CselectionType%3AEXCLUDED)%2C(id%3A320%2Ctext%3AOwner%2520%252F%2520Partner%2CselectionType%3AEXCLUDED)%2C(id%3A220%2Ctext%3ADirector%2CselectionType%3AEXCLUDED)%2C(id%3A310%2Ctext%3ACXO%2CselectionType%3AEXCLUDED)%2C(id%3A210%2Ctext%3AExperienced%2520Manager%2CselectionType%3AEXCLUDED)%2C(id%3A130%2Ctext%3AStrategic%2CselectionType%3AEXCLUDED)%2C(id%3A120%2Ctext%3ASenior%2CselectionType%3AEXCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A25%2Ctext%3ASales%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A1%2Ctext%3ALess%2520than%25201%2520year%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A75105561%2Ctext%3ABumame%2CselectionType%3AEXCLUDED))))%2Ckeywords%3Asales%2520representative)&sessionId=szg6z1TfRoel8gTPl5n4Rg%3D%3D&viewAllFilters=true",
+                note: "Hiring Management Trainee - Account Executive, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Bumame dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bumame-trainee-acc-xctive-hire. Speak soon!"
+            },
+            bumame_sales_manager: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4431092122%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A110%2Ctext%3AEntry%2520Level%2CselectionType%3AINCLUDED)%2C(id%3A100%2Ctext%3AIn%2520Training%2CselectionType%3AINCLUDED)%2C(id%3A200%2Ctext%3AEntry%2520Level%2520Manager%2CselectionType%3AEXCLUDED)%2C(id%3A300%2Ctext%3AVice%2520President%2CselectionType%3AEXCLUDED)%2C(id%3A320%2Ctext%3AOwner%2520%252F%2520Partner%2CselectionType%3AEXCLUDED)%2C(id%3A220%2Ctext%3ADirector%2CselectionType%3AEXCLUDED)%2C(id%3A310%2Ctext%3ACXO%2CselectionType%3AEXCLUDED)%2C(id%3A210%2Ctext%3AExperienced%2520Manager%2CselectionType%3AEXCLUDED)%2C(id%3A130%2Ctext%3AStrategic%2CselectionType%3AEXCLUDED)%2C(id%3A120%2Ctext%3ASenior%2CselectionType%3AEXCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A25%2Ctext%3ASales%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1287930%2Ctext%3ASiloam%2520Hospitals%2520Group%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1208616%2Ctext%3APrudential%2520Indonesia%2520%2528PT%2520Prudential%2520Life%2520Assurance%2529%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A13456296%2Ctext%3APT%2520Prodia%2520Widyahusada%2520Tbk%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A14436006%2Ctext%3AManulife%2520Indonesia%2520%2528PT%2520Asuransi%2520Jiwa%2520Manulife%2520Indonesia%2529%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A75105561%2Ctext%3ABumame%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0)))))%2Ckeywords%3Ab2b%2520sales%2520manager)&sessionId=rN6TpwNBTQObaRMs5C%2BU0Q%3D%3D",
+                note: "Hiring Corporate B2B Sales Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama Bumame dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bumame-b2b-sales-manager-hire. Speak soon!"
+            },
+            bprks_credit_marketing_head: {
+                url: "",
+                note: "Hiring Credit Marketing Head. Hai [lead_name], saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui tautan berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bprks-marketing-head-hire. Speak soon!"
+            },
+            bprks_business_operations_advisor: {
+                url: "",
+                note: "Hiring Business Operations Advisor. Hai [lead_name], saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui tautan berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bprks-biz-ops-advisor-hire Speak soon!"
+            },
+            bprks_credit_marketing: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4431092122%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)%2C(id%3A102877321%2Ctext%3AWest%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A109018168%2Ctext%3AKota%2520Bogor%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A111234457%2Ctext%3ADepok%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A115051283%2Ctext%3AKota%2520Tangerang%252C%2520Banten%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A102644903%2Ctext%3ABekasi%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1754533%2Ctext%3APT.%2520BPR%2520KS%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1133108%2Ctext%3AMandiri%2520Tunas%2520Finance%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A13363468%2Ctext%3AWOM%2520Finance%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A5683796%2Ctext%3APT%2520BCA%2520Finance%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1918178%2Ctext%3APT%2520BFI%2520Finance%2520Indonesia%252C%2520Tbk%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A15%2Ctext%3AMarketing%2CselectionType%3AINCLUDED))))%2Ckeywords%3Acredit%2520marketing)&sessionId=jn26DxqLQPabIUGa7eLOZw%3D%3D",
+                note: "Hiring Credit Marketing. Hai [lead_name], saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui: https://tinyurl.com/bprks-cred-marketing-hire. Speak soon!"
+            },
+            bprks_programmer:{
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4761886108%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1754533%2Ctext%3APT.%2520BPR%2520KS%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A105379535%2Ctext%3ABandung%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A101367201%2Ctext%3AGreater%2520Jakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A8%2Ctext%3AEngineering%2CselectionType%3AINCLUDED)%2C(id%3A13%2Ctext%3AInformation%2520Technology%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A6%2Ctext%3ATechnology%252C%2520Information%2520and%2520Internet%2CselectionType%3AINCLUDED)))%2C(type%3ASCHOOL%2Cvalues%3AList((id%3A15092786%2Ctext%3AUniversitas%2520Kristen%2520Maranatha%2520Bandung%2CselectionType%3AINCLUDED)%2C(id%3A375581%2Ctext%3AInstitut%2520Teknologi%2520Harapan%2520Bangsa%2CselectionType%3AINCLUDED))))%2Ckeywords%3Afull%2520stack%2520developer)&sessionId=mF7ziaHDTVKeCQgU9unj3g%3D%3D&viewAllFilters=true",
+                note: "Hiring Full Stack Developer, Hai [lead_name], saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui: https://tinyurl.com/bprks-fullstack-dev-hire. Speak soon!"
+            },
+            bprks_ba:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4932565308%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A29%2Ctext%3ABusiness%2520Analyst%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A105379535%2Ctext%3ABandung%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1754533%2Ctext%3APT.%2520BPR%2520KS%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))))&sessionId=981zElX9T9ySVjJkLbWeLw%3D%3D&viewAllFilters=true",
+                note: "Hiring Business Analyst, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bprks-business-analyst-hire. Speak soon!"
+            },
+            bprks_it:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4932565892%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A71%2Ctext%3AInformation%2520Technology%2520Staff%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A105379535%2Ctext%3ABandung%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1754533%2Ctext%3APT.%2520BPR%2520KS%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))))&sessionId=uX5jDPkpQGqh%2BqEelKcJ%2FQ%3D%3D&viewAllFilters=true",
+                note: "Hiring IT Staff, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bprks-it-staff-hire. Speak soon!"
+            },
+            bprks_secretary:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4761886108%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A1754533%2Ctext%3APT.%2520BPR%2520KS%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A105379535%2Ctext%3ABandung%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A76%2Ctext%3ASecretary%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A2%2Ctext%3AAdministrative%2CselectionType%3AINCLUDED)%2C(id%3A12%2Ctext%3AHuman%2520Resources%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A110%2Ctext%3AEntry%2520Level%2CselectionType%3AINCLUDED)))))&sessionId=72HNRo5FRUG%2B%2BJibPsn40Q%3D%3D&viewAllFilters=true",
+                note: "Hiring Secretary, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama BPR KS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bprks-secretary-hire. Speak soon!"
+            },
+            mahkota_finance: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4671014148%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A104554223%2Ctext%3ABatam%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A90010112%2Ctext%3AGreater%2520Batam%2CselectionType%3AINCLUDED)%2C(id%3A104065127%2Ctext%3ABatam%2520City%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED))))%2Ckeywords%3Asenior%2520finance)&sessionId=s5uhb1nWTqC%2ByNtoR5RNgw%3D%3D",
+                note: "Hiring Senior Finance Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Mahkota Property dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/mahkota-senior-finance-hire. Speak soon!"
+            },
+            mahkota_site: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4671014148%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A104554223%2Ctext%3ABatam%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A90010112%2Ctext%3AGreater%2520Batam%2CselectionType%3AINCLUDED)%2C(id%3A104065127%2Ctext%3ABatam%2520City%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED))))%2Ckeywords%3Asite%2520manager)&sessionId=5GtLIFvqSAiDF7hRjJy1vA%3D%3D",
+                note: "Hiring Site Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Mahkota Property dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/mahkota-site-manager-hire. Speak soon!"
+            },
+            mahkota_marketing: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4671014148%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A104554223%2Ctext%3ABatam%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A90010112%2Ctext%3AGreater%2520Batam%2CselectionType%3AINCLUDED)%2C(id%3A104065127%2Ctext%3ABatam%2520City%252C%2520Riau%2520Islands%252C%2520Indonesia%2CselectionType%3AINCLUDED))))%2Ckeywords%3Amarketing%2520inhouse)&sessionId=giXAwKQbS96uphGcHbF%2Bmg%3D%3D",
+                note: "Hiring Marketing Inhouse, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Mahkota Property dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/mahkota-marketing-inhouse-hire. Speak soon!"
+            },
+            mahkota_project: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4693579324%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AINDUSTRY%2Cvalues%3AList((id%3A44%2Ctext%3AReal%2520Estate%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED))))%2Ckeywords%3Aproject%2520manager)&sessionId=ziUrR0FWRzGdTP%2B4ojqqJQ%3D%3D",
+                note: "Hiring Project General Manager Hai [lead_name], saya Aktsa. Saya merekrut atas nama Mahkota Property dan merasa Anda cocok untuk posisi ini di Tangerang (gaji Rp15-30 juta). Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/5xn7j22c. Speak soon!"
+            },
+            rey_claim: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4719732332%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A105898461%2Ctext%3ATangerang%252C%2520Banten%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A102644903%2Ctext%3ABekasi%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A111234457%2Ctext%3ADepok%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A102708774%2Ctext%3ABogor%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A74358752%2Ctext%3ARey.id%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1208616%2Ctext%3APrudential%2520Indonesia%2520%2528PT%2520Prudential%2520Life%2520Assurance%2529%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A16243550%2Ctext%3AAIA%2520Indonesia%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1424354%2Ctext%3ASequis%2520Life%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A14436006%2Ctext%3AManulife%2520Indonesia%2520%2528PT%2520Asuransi%2520Jiwa%2520Manulife%2520Indonesia%2529%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A14392500%2Ctext%3AAllianz%2520Indonesia%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A77114802%2Ctext%3AAXA%2520Insurance%2520Indonesia%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A20453730%2Ctext%3AAgung%2520Sedayu%2520Group%2CselectionType%3AINCLUDED%2Cparent%3A(id%3A0)))))%2Ckeywords%3Ahead%2520of%2520claims)&sessionId=L4lxRAlKQM249RDc0z5YJA%3D%3D",
+                note: "Hiring Head of Claim, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Rey.id dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/zyxfj9y8. Speak soon!"
+            },
+            kusuma_gm: {
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4746800284%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AINDUSTRY%2Cvalues%3AList((id%3A44%2Ctext%3AReal%2520Estate%2CselectionType%3AINCLUDED)%2C(id%3A48%2Ctext%3AConstruction%2CselectionType%3AINCLUDED)%2C(id%3A50%2Ctext%3AArchitecture%2520and%2520Planning%2CselectionType%3AINCLUDED)%2C(id%3A51%2Ctext%3ACivil%2520Engineering%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A18%2Ctext%3AOperations%2CselectionType%3AINCLUDED)%2C(id%3A4%2Ctext%3ABusiness%2520Development%2CselectionType%3AINCLUDED)%2C(id%3A20%2Ctext%3AProgram%2520and%2520Project%2520Management%2CselectionType%3AINCLUDED)%2C(id%3A8%2Ctext%3AEngineering%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A210%2Ctext%3AExperienced%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A105898461%2Ctext%3ATangerang%252C%2520Banten%252C%2520Indonesia%2CselectionType%3AINCLUDED))))%2Ckeywords%3Ageneral%2520Manager)&sessionId=0wdivMx0QROxaNvwJPb44Q%3D%3D",
+                note: "Hiring General Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama PT. Kusuma Jaya Harmoni dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/kusuma-gm-hire. Speak soon!"
+            },
+            kusuma_finance: {
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4746800284%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AINDUSTRY%2Cvalues%3AList((id%3A44%2Ctext%3AReal%2520Estate%2CselectionType%3AINCLUDED)%2C(id%3A48%2Ctext%3AConstruction%2CselectionType%3AINCLUDED)%2C(id%3A47%2Ctext%3AAccounting%2CselectionType%3AINCLUDED)%2C(id%3A43%2Ctext%3AFinancial%2520Services%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A105898461%2Ctext%3ATangerang%252C%2520Banten%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A1032%2Ctext%3AFinance%2520Officer%2CselectionType%3AINCLUDED)%2C(id%3A7753%2Ctext%3AAccounting%2520Specialist%2CselectionType%3AINCLUDED)%2C(id%3A40%2Ctext%3AAccountant%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A10%2Ctext%3AFinance%2CselectionType%3AINCLUDED)%2C(id%3A1%2Ctext%3AAccounting%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))))&sessionId=030a2C6VT7eNUtXMCIifqg%3D%3D",
+                note: "Hiring Finance & Accounting Officer, Hai [lead_name], saya Aktsa. Saya merekrut atas nama PT. Kusuma Jaya Harmoni dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/kusuma-finance-hire. Speak soon!"
+            },
+            kusuma_marketing: {
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4746800284%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AINDUSTRY%2Cvalues%3AList((id%3A44%2Ctext%3AReal%2520Estate%2CselectionType%3AINCLUDED)%2C(id%3A48%2Ctext%3AConstruction%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A105898461%2Ctext%3ATangerang%252C%2520Banten%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A15%2Ctext%3AMarketing%2CselectionType%3AINCLUDED)%2C(id%3A25%2Ctext%3ASales%2CselectionType%3AINCLUDED)%2C(id%3A4%2Ctext%3ABusiness%2520Development%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A3%2Ctext%3A3%2520to%25205%2520years%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A26%2Ctext%3AMarketing%2520Manager%2CselectionType%3AINCLUDED)%2C(id%3A2533%2Ctext%3AMarketing%2520Lead%2CselectionType%3AINCLUDED)%2C(id%3A14%2Ctext%3ASales%2520Manager%2CselectionType%3AINCLUDED)))))&sessionId=030a2C6VT7eNUtXMCIifqg%3D%3D",
+                note: "Hiring Marketing Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama PT. Kusuma Jaya Harmoni dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/kusuma-marketing-manager-hire. Speak soon!"
+            },
+            alfamedika_storemanager:{
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4761886108%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3AREGION%2Cvalues%3AList((id%3A102644903%2Ctext%3ABekasi%252C%2520West%2520Java%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A106845349%2Ctext%3ANorth%2520Jakarta%252C%2520Jakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A106115926%2Ctext%3AWest%2520Jakarta%252C%2520Jakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A111356910%2Ctext%3AEast%2520Jakarta%252C%2520Jakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A3250%2Ctext%3ARetail%2520Pharmacies%2CselectionType%3AINCLUDED)%2C(id%3A1359%2Ctext%3ARetail%2520Health%2520and%2520Personal%2520Care%2520Products%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A200%2Ctext%3AEntry%2520Level%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A18%2Ctext%3AOperations%2CselectionType%3AINCLUDED)%2C(id%3A25%2Ctext%3ASales%2CselectionType%3AINCLUDED))))%2Ckeywords%3Astore%2520manager)&sessionId=gZJYrjJCR4KD6eVl5hG1Ag%3D%3D",
+                note: "Hiring Store Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Alfa Medika dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/alfamedika-store-manager-hire. Speak soon!",
+            },
+            zuri_chief_accountant:{
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4780077844%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105938998%2Ctext%3AZuri%2520Hotel%2520Management%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1432370%2Ctext%3AGrand%2520Zuri%2520Hotels%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A101832120%2Ctext%3AKetapang%252C%2520West%2520Kalimantan%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A114557650%2Ctext%3AKota%2520Dumai%252C%2520Riau%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A1%2Ctext%3AAccounting%2CselectionType%3AINCLUDED)%2C(id%3A10%2Ctext%3AFinance%2CselectionType%3AINCLUDED))))%2Ckeywords%3Achief%2520accountant)&sessionId=HG1m%2B1A3QwWp1KT8dIcqHg%3D%3D",
+                note: "Hiring Chief Accountant, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Zuri Hotel Management dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/zuri-chief-accountant-hire. Speak soon!",
+            },
+            zuri_hotel_gm:{
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4780077844%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105938998%2Ctext%3AZuri%2520Hotel%2520Management%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))%2C(id%3Aurn%253Ali%253Aorganization%253A1432370%2Ctext%3AGrand%2520Zuri%2520Hotels%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A101832120%2Ctext%3AKetapang%252C%2520West%2520Kalimantan%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A114557650%2Ctext%3AKota%2520Dumai%252C%2520Riau%252C%2520Indonesia%2CselectionType%3AINCLUDED)%2C(id%3A107012215%2Ctext%3AWest%2520Kalimantan%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A18%2Ctext%3AOperations%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A31%2Ctext%3AHospitality%2CselectionType%3AINCLUDED)%2C(id%3A2194%2Ctext%3AHotels%2520and%2520Motels%2CselectionType%3AINCLUDED))))%2Ckeywords%3Ageneral%2520manager)&sessionId=2Pav1WBzS6eUPeUo46J6Xg%3D%3D",
+                note: "Hiring Hotel General Manager, Hai [lead_name], saya Aktsa. Saya merekrut atas nama Zuri Hotel Management dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/zuri-hotel-gm-hire. Speak soon!",
+            },
+            fds_junior_it:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4889925436%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A2945%2Ctext%3AInformation%2520Technology%2520System%2520Administrator%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A13%2Ctext%3AInformation%2520Technology%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A110%2Ctext%3AEntry%2520Level%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))))&sessionId=0q5MSL%2FURTmj2VXizmFaLg%3D%3D&viewAllFilters=true",
+                note: "Hiring Junior IT System Administator, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-junior-it-sys-admin-hire. Speak soon!"
+            },
+            fds_it_pm:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4889927204%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A313%2Ctext%3AInformation%2520Technology%2520Project%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A4%2Ctext%3A6%2520to%252010%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A4%2Ctext%3ASoftware%2520Development%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))))&sessionId=q5EsPw3QQzqyMKHQ93HNxA%3D%3D&viewAllFilters=true",
+                note: "Hiring IT Project Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-it-project-manager-hire. Speak soon!"
+            },
+            fds_it_dba:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4889927828%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A132%2Ctext%3ADatabase%2520Administrator%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))))&sessionId=K3iE80CsQAqgCzkoG1mnFg%3D%3D&viewAllFilters=true",
+                note: "Hiring IT Database Administrator, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-it-dba-hire. Speak soon!"
+            },
+            fds_sys_eng:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4889927884%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A32%2Ctext%3ASystem%2520Engineer%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A2%2Ctext%3A1%2520to%25202%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)))))&sessionId=e87ADC%2F6Q5iZfAJ%2FiR1wiA%3D%3D&viewAllFilters=true",
+                note: "Hiring System Engineer, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-sys-engineer-hire. Speak soon!"
+            },
+            fds_risk_management:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4909050228%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A906%2Ctext%3ARisk%2520Management%2520Specialist%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A10%2Ctext%3AFinance%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A3%2Ctext%3A3%2520to%25205%2520years%2CselectionType%3AINCLUDED)))))&sessionId=jWs4%2FUJCTXmFp49Up2tjGw%3D%3D&viewAllFilters=true",
+                note: "Hiring Risk Management Specialist, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-risk-management-hire. Speak soon!"
+            },
+            fds_senior_tax:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4909301548%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A3302%2Ctext%3ASenior%2520Tax%2520Accountant%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A13284798%2Ctext%3AFortress%2520Data%2520Services%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A3%2Ctext%3A3%2520to%25205%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A1%2Ctext%3AAccounting%2CselectionType%3AINCLUDED)))))&sessionId=qyAMuEgaS4mrYW%2BJtPjztQ%3D%3D&viewAllFilters=true",
+                note: "Hiring Senior Tax Accountant, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama FDS dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/fds-senior-tax-accountant-hire. Speak soon!"
+            },
+            bukirmega_ppe: {
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4975955404%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A46%2Ctext%3AAssistant%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105339665%2Ctext%3APT%2520Bukitmega%2520Masabadi%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A3%2Ctext%3A3%2520to%25205%2520years%2CselectionType%3AINCLUDED)%2C(id%3A4%2Ctext%3A6%2520to%252010%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A25%2Ctext%3AManufacturing%2CselectionType%3AINCLUDED)))))&sessionId=rmXbckVSTZi2uwowI5THUw%3D%3D&viewAllFilters=true",
+                note: "Hiring PPE Assistant Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama Bukit Mega dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bukitmega-ppe-ast-manager-hire. Speak soon!"
+            },
+            bukirmega_sales:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4975955372%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A237%2Ctext%3AAssistant%2520Sales%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105339665%2Ctext%3APT%2520Bukitmega%2520Masabadi%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A4%2Ctext%3A6%2520to%252010%2520years%2CselectionType%3AINCLUDED)))))&sessionId=wusVmKCgTkW1a8by7HcEew%3D%3D&viewAllFilters=true",
+                note: "Hiring Sales Assistant Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama Bukit Mega dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bukitmega-sales-ast-mngr-hire. Speak soon!"
+            },
+            bukirmega_production:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4975955268%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A108%2Ctext%3AProduction%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105339665%2Ctext%3APT%2520Bukitmega%2520Masabadi%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A4%2Ctext%3A6%2520to%252010%2520years%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)%2C(id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A25%2Ctext%3AManufacturing%2CselectionType%3AINCLUDED)))))&sessionId=RP9aety3QDW4NhfguXRL4A%3D%3D&viewAllFilters=true",
+                note: "Hiring Production Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama Bukit Mega dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bukitmega-prod-manager-hire. Speak soon!"
+            },
+            bukirmega_marketing:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4975954316%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A26%2Ctext%3AMarketing%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A105339665%2Ctext%3APT%2520Bukitmega%2520Masabadi%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A102478259%2Ctext%3AIndonesia%2CselectionType%3AINCLUDED)%2C(id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A3%2Ctext%3A3%2520to%25205%2520years%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A110%2Ctext%3AEntry%2520Level%2CselectionType%3AINCLUDED)))))&sessionId=dgv1pGMfSOeBBJZLg%2F7E1A%3D%3D&viewAllFilters=true",
+                note: "Hiring Marketing Manager, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama Bukit Mega dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/bukitmega-mrkting-manager-hire. Speak soon!"
+            },
+            otomultiartha_headcompliance:{
+                url: "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled%3Atrue%2CrecentSearchParam%3A(id%3A4984409116%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A4341%2Ctext%3AHead%2520of%2520Compliance%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A8882041%2Ctext%3APT%2520OTO%2520Multiartha%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AYEARS_OF_EXPERIENCE%2Cvalues%3AList((id%3A4%2Ctext%3A6%2520to%252010%2520years%2CselectionType%3AINCLUDED)))%2C(type%3ASENIORITY_LEVEL%2Cvalues%3AList((id%3A220%2Ctext%3ADirector%2CselectionType%3AINCLUDED)%2C(id%3A210%2Ctext%3AExperienced%2520Manager%2CselectionType%3AINCLUDED)))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A14%2Ctext%3ALegal%2CselectionType%3AINCLUDED))))%2Ckeywords%3Ahead%2520of%2520compliance)&sessionId=QXiiaIH1RRWWS%2Bq08%2FUHgQ%3D%3D&viewAllFilters=true",
+                note: "Hiring Head of Compliance Department, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama OTO Multiartha dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/otomultiartha-comp-dept-hire. Speak soon!"
+            },
+            otomultiartha_secretary:{
+                url: "https://www.linkedin.com/sales/search/people?query=(recentSearchParam%3A(id%3A4984805204%2CdoLogHistory%3Atrue)%2Cfilters%3AList((type%3ACURRENT_TITLE%2Cvalues%3AList((id%3A76%2Ctext%3ASecretary%2CselectionType%3AINCLUDED)))%2C(type%3ACURRENT_COMPANY%2Cvalues%3AList((id%3Aurn%253Ali%253Aorganization%253A8882041%2Ctext%3APT%2520OTO%2520Multiartha%2CselectionType%3AEXCLUDED%2Cparent%3A(id%3A0))))%2C(type%3AREGION%2Cvalues%3AList((id%3A104370960%2Ctext%3AJakarta%252C%2520Indonesia%2CselectionType%3AINCLUDED)))%2C(type%3AFUNCTION%2Cvalues%3AList((id%3A2%2Ctext%3AAdministrative%2CselectionType%3AINCLUDED)%2C(id%3A18%2Ctext%3AOperations%2CselectionType%3AINCLUDED)))))&sessionId=A5lov3lpTVSm%2B7GRnd23lQ%3D%3D&viewAllFilters=true",
+                note: "Hiring Secretary to Director, Hai [lead_name], Saya Aktsa. Saya merekrut atas nama OTO Multiartha dan merasa Anda cocok untuk posisi ini. Silakan melamar melalui link berikut untuk proses review HR yang lebih cepat: https://tinyurl.com/otomultiartha-secretary-hire. Speak soon!"
+            }
+        };
+
+        // Handle template selection
+        document.getElementById('searchTemplate').addEventListener('change', function(e) {
+            const template = templates[e.target.value];
+            if (template) {
+                document.getElementById('searchUrl').value = template.url;
+                document.getElementById('connectNote').value = template.note;
+            }
+        });
+
+        </script>
+
+        <!-- Add this before the closing </body> tag -->
+        <div class="container">
+            <!-- Replace the existing progress container div with this enhanced version -->
+            
+            
+            
+        
+            <script>
+                // === Supabase & API config ===
+                const SUPABASE_URL = 'https://xydsolvrbsimwltkchow.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZHNvbHZyYnNpbXdsdGtjaG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMzE3MzUsImV4cCI6MjA2NTcwNzczNX0.UhG6bbpfBwHLtBRWAoCNJOANZQCaxkqD8A91rwzT2iE';
+            
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const API_URL = 'http://127.0.0.1:5000/api';
+            
+                // === Form handler ===
+                document.getElementById('crawlerForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const startButton = document.getElementById('startButton');
+                    const stopButton = document.getElementById('stopButton');
+                    
+                    startButton.classList.add('button-disabled');
+                    startButton.disabled = true;
+                    stopButton.style.display = 'inline-block';
+                    
+                    const formData = {
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value,
+                        searchUrl: document.getElementById('searchUrl').value,
+                        connectNote: document.getElementById('connectNote').value,
+                        templateName: document.getElementById('searchTemplate').value,
+                        leadLimit: document.getElementById('leadLimit').value || null
+                    };
+                
+                    try {
+                        const response = await fetch('/start-crawler', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(formData)
+                        });
+                
+                        if (response.ok) {
+                            const data = await response.json();
+                            document.getElementById('progress').style.display = 'block';
+                            startProgressStream(data.queue_id);
+                        } else {
+                            alert('Failed to start crawler. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error starting crawler: ' + error.message);
+                    }
+                });
+                
+                document.getElementById('stopButton').addEventListener('click', async function() {
+                    try {
+                        const response = await fetch('/stop-crawler', {
+                            method: 'POST'
+                        });
+                        
+                        if (response.ok) {
+                            if (currentEventSource) {
+                                currentEventSource.close();
+                            }
+                            addLogEntry('Crawler stopped by user', 'warning');
+                            resetButtons();
+                        } else {
+                            alert('Failed to stop crawler. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error stopping crawler: ' + error.message);
+                    }
+                });
+                
+                function resetButtons() {
+                    const startButton = document.getElementById('startButton');
+                    const stopButton = document.getElementById('stopButton');
+                    
+                    startButton.classList.remove('button-disabled');
+                    startButton.disabled = false;
+                    stopButton.style.display = 'none';
+                }
+                
+                let currentEventSource = null;
+            
+                function startProgressStream(queueId) {
+                    const progressLog = document.getElementById('progress-log');
+                    const successfulLeads = document.getElementById('successful-leads');
+                    
+                    if (currentEventSource) {
+                        currentEventSource.close();
+                    }
+            
+                    currentEventSource = new EventSource(`/stream/${queueId}`);
+                
+                    currentEventSource.onmessage = async function(event) {
+                        const progress = JSON.parse(event.data);
+                        
+                        // Add log entry
+                        const entry = document.createElement('div');
+                        entry.className = `log-entry log-${progress.status}`;
+                        entry.textContent = `[${progress.timestamp}] ${progress.message}`;
+                        progressLog.appendChild(entry);
+                        progressLog.scrollTop = progressLog.scrollHeight;
+                
+                        // If this is a successful connection with lead data
+                        if (progress.status === 'success' && progress.data && progress.data.name) {
+                            const leadItem = document.createElement('li');
+                            leadItem.innerHTML = `
+                                <div class="lead-info">
+                                    <a href="${progress.data.profile_url}" target="_blank" class="lead-name">${progress.data.name}</a>
+                                </div>
+                                <div class="lead-time">${progress.data.connection_status}</div>
+                            `;
+                            successfulLeads.appendChild(leadItem);
+                            
+                            // Update counter
+                            const counter = document.getElementById('connection-counter') || createConnectionCounter();
+                            counter.textContent = `Total Connections: ${successfulLeads.children.length}`;
+            
+                            // ✅ Simpan ke Supabase (pakai tabel candidates)
+                            try {
+                                const { error } = await supabase.from("candidates").insert([{
+                                    candidates_name: progress.data.name,
+                                    profile_url: progress.data.profile_url,
+                                    connection_status: progress.data.connection_status,
+                                    created_at: new Date().toISOString(), 
+                                    note_sent: document.getElementById('connectNote').value, 
+                                    search_url: document.getElementById('searchUrl').value, 
+                                    search_template: document.getElementById('searchTemplate').value
+                                }]);
+            
+                                if (error) console.error("❌ Supabase insert error:", error);
+                                else console.log("✅ Candidate saved to Supabase!");
+                            } catch (err) {
+                                console.error("❌ Supabase save failed:", err);
+                            }
+                        }
+                    };
+                
+                    currentEventSource.onerror = function() {
+                        currentEventSource.close();
+                        resetButtons();
+                    };
+                }
+                
+                function createConnectionCounter() {
+                    const counter = document.createElement('div');
+                    counter.id = 'connection-counter';
+                    counter.className = 'connection-counter';
+                    document.querySelector('.leads-list').insertBefore(counter, document.getElementById('successful-leads'));
+                    return counter;
+                }
+                
+                function addLogEntry(message, status) {
+                    const progressLog = document.getElementById('progress-log');
+                    const entry = document.createElement('div');
+                    entry.className = `log-entry log-${status}`;
+                    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                    progressLog.appendChild(entry);
+                    progressLog.scrollTop = progressLog.scrollHeight;
+                }
+            
+                async function loadTemplateHistory(template) {
+                    if (!template) return;
+                    
+                    const historyLoading = document.getElementById('history-loading');
+                    const historyContent = document.getElementById('history-content');
+                    
+                    try {
+                        historyLoading.classList.add('active');
+                        historyContent.innerHTML = '';
+                        
+                        const response = await fetch(`/get_template_history?template=${template}`);
+                        
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            throw new Error('Server returned non-JSON response.');
+                        }
+                        
+                        const data = await response.json();
+                        
+                        const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        sortedData.forEach(entry => {
+                            const dateSection = document.createElement('div');
+                            dateSection.className = 'history-section';
+                            dateSection.innerHTML = `
+                                <h4>${entry.date}</h4>
+                                <div class="connection-counter">Total Leads: ${entry.leads.length}</div>
+                                <ul class="history-leads">
+                                    ${entry.leads.map(lead => `
+                                        <li>
+                                            <div class="lead-info">
+                                                <a href="${lead.profile_url}" target="_blank" class="lead-name">${lead.name}</a>
+                                            </div>
+                                            <div class="lead-time">${lead.connection_status}</div>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            `;
+                            historyContent.appendChild(dateSection);
+                        });
+                    } catch (error) {
+                        console.error('Error loading template history:', error);
+                        historyContent.innerHTML = `<div class="error">Error loading history: ${error.message}</div>`;
+                    } finally {
+                        historyLoading.classList.remove('active');
+                    }
+                }
+            
+                document.getElementById('searchTemplate').addEventListener('change', (e) => {
+                    loadTemplateHistory(e.target.value);
+                });
+            
+                document.getElementById('saveButton').addEventListener('click', async function() {
+                    try {
+                        const templateData = {
+                            name: document.getElementById('searchTemplate').value,
+                            content: {
+                                url: document.getElementById('searchUrl').value,
+                                note: document.getElementById('connectNote').value,
+                                leadLimit: document.getElementById('leadLimit').value || null
+                            },
+                            created_at: new Date().toISOString()
+                        };
+            
+                        const { error } = await supabase.from("templates").insert([templateData]);
+            
+                        if (error) {
+                            console.error("Supabase insert error:", error);
+                            alert("Failed to save template: " + error.message);
+                        } else {
+                            alert("Template saved successfully to Supabase!");
+                        }
+                    } catch (error) {
+                        console.error("Error saving template:", error);
+                        alert("Error saving template: " + error.message);
+                    }
+                });
+            </script>              
+</div>
+</body>
+</html>
